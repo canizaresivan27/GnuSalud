@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  gnuhealth:
+    image: juanmms/gnuhealth
+    ports:
+      - "${TRYTON_PORT}:8000"
+    depends_on:
+      - db
+    volumes:
+      - modulos-tryton:/home/gnuhealth/gnuhealth/tryton/server/trytond-6.0.36/trytond/modules
+      - ./trytond.conf:/home/gnuhealth/gnuhealth/tryton/server/config/trytond.conf
+    networks:
+      - gnuhealth
+  db:
+    image: juanmms/gnuhealth-postgres:v1.0
+    ports:
+      - "5456:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=/run/secrets/postgres_password
+      - POSTGRES_USER=/run/secrets/postgres_user
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgdata13:/var/lib/postgresql/data/pgdata
+    networks:
+      - gnuhealth
+
+volumes:
+  modulos-tryton:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./modulos_tryton
+      o: bind
+
+networks:
+  gnuhealth:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.16.0.0/24
+secrets:
+  postgres_password:
+    file: postgres_password.txt
+  postgres_user:
+    file: postgres_user.txt
